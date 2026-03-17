@@ -82,7 +82,8 @@ class FillAreaAction(pcbnew.ActionPlugin):
                     fill.SetDebug()
                 fill.SetRandom(a.m_Random.IsChecked())
                 fill.SetViaThroughAreas(a.m_viaThroughAreas.IsChecked())
-                fill.SetType(a.m_cbFillType.GetStringSelection())
+                fill.SetGridType(a.m_cbGridType.GetStringSelection())
+                fill.SetFillType(a.m_cbFillType.GetStringSelection())
                 fill.SetSameNetTracks(a.m_sameNetTracks.IsChecked())
                 if a.m_only_selected.IsChecked():
                     fill.OnlyOnSelectedArea()

@@ -107,6 +107,10 @@ class FillArea:
     REASON_DRAWING = 6
     REASON_STEP = 7
 
+    GRID_TYPE_BOARD_BOUNDS = "Board Bounds"
+    GRID_TYPE_ABSOLUTE = "Absolute (0, 0)"
+    GRID_TYPE_GRID_ORIGIN = "Grid Origin"
+
     FILL_TYPE_RECTANGULAR = "Rectangular"
     FILL_TYPE_STAR = "Star"
     FILL_TYPE_CONCENTRIC = "Concentric"
@@ -141,6 +145,7 @@ class FillArea:
         self.netname = None
         self.debug = False
         self.random = False
+        self.grid_type = self.GRID_TYPE_BOARD_BOUNDS
         self.fill_type = self.FILL_TYPE_RECTANGULAR
         if self.netname is None:
             self.SetNetname("GND")
@@ -173,8 +178,20 @@ class FillArea:
         self.same_net_tracks = r
         return self
 
-    def SetType(self, type):
-        self.fill_type = type
+    def SetGridType(self, grid_type):
+        self.grid_type = grid_type
+        return self
+
+    def GetGridOrig(self, lboard):
+        if self.grid_type == self.GRID_TYPE_ABSOLUTE:
+            return VECTOR2I(0, 0)
+        elif self.grid_type == self.GRID_TYPE_GRID_ORIGIN:
+            return self.pcb.GetDesignSettings().GetGridOrigin()
+        else:
+            return lboard.GetPosition()
+
+    def SetFillType(self, fill_type):
+        self.fill_type = fill_type
         return self
 
     def SetPCB(self, pcb):
@@ -596,7 +613,7 @@ STEP         = '-'
         lboard = self.pcb.ComputeBoundingBox(False)
         if self.debug:
             print("%s: Line %u" % (time.time(), currentframe().f_lineno))
-        origin = lboard.GetPosition()
+        origin = self.GetGridOrig(lboard)
         if self.debug:
             print("%s: Line %u" % (time.time(), currentframe().f_lineno))
 
@@ -606,8 +623,19 @@ STEP         = '-'
         if l_clearance < self.step:
             l_clearance = self.step
 
-        x_limit = int((lboard.GetWidth() + l_clearance) / l_clearance) + 1
-        y_limit = int((lboard.GetHeight() + l_clearance) / l_clearance) + 1
+        # Calculate grid extents relative to origin (support negative offsets)
+        board_min_x = lboard.GetPosition().x
+        board_min_y = lboard.GetPosition().y
+        board_max_x = board_min_x + lboard.GetWidth()
+        board_max_y = board_min_y + lboard.GetHeight()
+
+        x_min = int(floor((board_min_x - origin.x - l_clearance) / l_clearance))
+        x_max = int(ceil((board_max_x - origin.x + l_clearance) / l_clearance))
+        y_min = int(floor((board_min_y - origin.y - l_clearance) / l_clearance))
+        y_max = int(ceil((board_max_y - origin.y + l_clearance) / l_clearance))
+
+        x_limit = x_max - x_min + 1
+        y_limit = y_max - y_min + 1
         if self.debug:
             print(
                 "l_clearance : {}; step : {}; size: {}; clearance: {}; x/y_limit ({} {}),board size : {} {}".format(
@@ -666,8 +694,8 @@ STEP         = '-'
                     for y in xrange(len(rectangle[0])):
                         # No other "target area" found yet => go on with processing
                         if rectangle[x][y] == self.REASON_NO_SIGNAL:
-                            current_x = origin.x + (x * l_clearance)  # Center of the via
-                            current_y = origin.y + (y * l_clearance)
+                            current_x = origin.x + ((x + (x_min)) * l_clearance)  # Center of the via
+                            current_y = origin.y + ((y + (y_min)) * l_clearance)
 
                             test_result = True  # Start with true, if a check fails, it is set to false
 
@@ -721,24 +749,24 @@ STEP         = '-'
             local_offset = max(pad.GetOwnClearance(UNDEFINED_LAYER, ""), self.clearance, max_target_area_clearance) + (self.size / 2)
             max_size = max(pad.GetSize().x, pad.GetSize().y)
 
-            start_x = int(floor(((pad.GetPosition().x - (max_size / 2.0 + local_offset)) - origin.x) / l_clearance))
-            stop_x = int(ceil(((pad.GetPosition().x + (max_size / 2.0 + local_offset)) - origin.x) / l_clearance))
+            start_x = int(floor(((pad.GetPosition().x - (max_size / 2.0 + local_offset)) - origin.x) / l_clearance)) - x_min
+            stop_x = int(ceil(((pad.GetPosition().x + (max_size / 2.0 + local_offset)) - origin.x) / l_clearance)) - x_min
 
-            start_y = int(floor(((pad.GetPosition().y - (max_size / 2.0 + local_offset)) - origin.y) / l_clearance))
-            stop_y = int(ceil(((pad.GetPosition().y + (max_size / 2.0 + local_offset)) - origin.y) / l_clearance))
+            start_y = int(floor(((pad.GetPosition().y - (max_size / 2.0 + local_offset)) - origin.y) / l_clearance)) - y_min
+            stop_y = int(ceil(((pad.GetPosition().y + (max_size / 2.0 + local_offset)) - origin.y) / l_clearance)) - y_min
 
             for x in range(start_x, stop_x + 1):
                 for y in range(start_y, stop_y + 1):
                     try:
                         if isinstance(rectangle[x][y], ViaObject):
                             size_rect = VECTOR2I(int(2 * local_offset), int(2 * local_offset))
-                            start_rect = VECTOR2I(int(origin.x + (l_clearance * x) - local_offset), int(origin.y + (l_clearance * y) - local_offset))
+                            start_rect = VECTOR2I(int(origin.x + ((x + x_min) * l_clearance) - local_offset), int(origin.y + ((y + y_min) * l_clearance) - local_offset))
                             if pad.HitTest(BOX2I(start_rect, size_rect), False):
                                 rectangle[x][y] = self.REASON_PAD
                             else:
                                 # Hit test doesn't handle large pads. This following should fix that.
                                 m = PCB_VIA(self.parent_area)
-                                m.SetPosition(VECTOR2I(int(origin.x + (l_clearance * x)), int(origin.y + (l_clearance * y))))
+                                m.SetPosition(VECTOR2I(int(origin.x + ((x + x_min) * l_clearance)), int(origin.y + ((y + y_min) * l_clearance))))
                                 m.SetNet(self.target_net)
                                 m.SetViaType(VIATYPE_THROUGH)
                                 m.SetDrill(int(self.drill))
@@ -783,17 +811,17 @@ STEP         = '-'
 
             clearance = max(track.GetOwnClearance(UNDEFINED_LAYER, ""), self.clearance, max_target_area_clearance) + (self.size / 2) + (track.GetWidth() / 2)
 
-            start_x = int(floor(((start_x - clearance) - origin.x) / l_clearance))
-            stop_x = int(ceil(((stop_x + clearance) - origin.x) / l_clearance))
+            start_x = int(floor(((start_x - clearance) - origin.x) / l_clearance)) - x_min
+            stop_x = int(ceil(((stop_x + clearance) - origin.x) / l_clearance)) - x_min
 
-            start_y = int(floor(((start_y - clearance) - origin.y) / l_clearance))
-            stop_y = int(ceil(((stop_y + clearance) - origin.y) / l_clearance))
+            start_y = int(floor(((start_y - clearance) - origin.y) / l_clearance)) - y_min
+            stop_y = int(ceil(((stop_y + clearance) - origin.y) / l_clearance)) - y_min
 
             for x in range(start_x, stop_x + 1):
                 for y in range(start_y, stop_y + 1):
                     try:
                         if isinstance(rectangle[x][y], ViaObject):
-                            start_rect = VECTOR2I(int(origin.x + (l_clearance * x) - clearance), int(origin.y + (l_clearance * y) - clearance))
+                            start_rect = VECTOR2I(int(origin.x + ((x + x_min) * l_clearance) - clearance), int(origin.y + ((y + y_min) * l_clearance) - clearance))
                             size_rect = VECTOR2I(int(2 * clearance), int(2 * clearance))
                             if track.HitTest(BOX2I(start_rect, size_rect), False):
                                 rectangle[x][y] = self.REASON_TRACK
@@ -812,14 +840,18 @@ STEP         = '-'
             inter = float(self.clearance + self.size) / 2
             bbox = draw.GetBoundingBox()
 
-            start_x = int(floor(((bbox.GetPosition().x - inter) - origin.x) / l_clearance))
-            stop_x = int(ceil(((bbox.GetPosition().x + (bbox.GetSize().x + inter)) - origin.x) / l_clearance))
+            start_x = int(floor(((bbox.GetPosition().x - inter) - origin.x) / l_clearance)) - x_min
+            stop_x = int(ceil(((bbox.GetPosition().x + (bbox.GetSize().x + inter)) - origin.x) / l_clearance)) - x_min
 
-            start_y = int(floor(((bbox.GetPosition().y - inter) - origin.y) / l_clearance))
-            stop_y = int(ceil(((bbox.GetPosition().y + (bbox.GetSize().y + inter)) - origin.y) / l_clearance))
+            start_y = int(floor(((bbox.GetPosition().y - inter) - origin.y) / l_clearance)) - y_min
+            stop_y = int(ceil(((bbox.GetPosition().y + (bbox.GetSize().y + inter)) - origin.y) / l_clearance)) - y_min
 
             for x in range(start_x, stop_x):
+                if x < 0 or x >= len(rectangle):
+                    continue
                 for y in range(start_y, stop_y):
+                    if y < 0 or y >= len(rectangle[0]):
+                        continue
                     rectangle[x][y] = self.REASON_DRAWING
 
         if self.debug:

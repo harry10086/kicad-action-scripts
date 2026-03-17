@@ -61,6 +61,16 @@ class FillAreaDialog ( wx.Dialog ):
 		self.m_StepMM = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, 0 )
 		fgSizer1.Add( self.m_StepMM, 1, wx.ALL|wx.EXPAND, 5 )
 
+		self.m_staticTextGridType = wx.StaticText( self, wx.ID_ANY, u"Grid Origin", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticTextGridType.Wrap( -1 )
+
+		fgSizer1.Add( self.m_staticTextGridType, 0, wx.ALL, 5 )
+
+		m_cbGridTypeChoices = [ u"Board Bounds", u"Absolute (0, 0)", u"Grid Origin" ]
+		self.m_cbGridType = wx.ComboBox( self, wx.ID_ANY, u"Board Bounds", wx.DefaultPosition, wx.DefaultSize, m_cbGridTypeChoices, wx.CB_READONLY )
+		self.m_cbGridType.SetSelection( 0 )
+		fgSizer1.Add( self.m_cbGridType, 0, wx.ALL|wx.EXPAND, 5 )
+
 
 		fgSizer1.Add( ( 0, 0), 1, wx.EXPAND, 5 )
 

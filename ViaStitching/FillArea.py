@@ -434,63 +434,110 @@ STEP         = '-'
         wxPrint("Calculate placement areas")
 
         zones = [zone for zone in self.pcb.Zones() if zone.GetNetname() == self.netname]
+        if not zones:
+            wxPrint("No areas to fill")
+            return
         self.parent_area = zones[0]
-        # Create set of polygons where fill zones overlap on all layers
-        poly_set = None
-        for layer_id in self.pcb.GetEnabledLayers().CuStack():
-            poly_set_layer = SHAPE_POLY_SET()
-            for zone in zones:
-                if zone.IsOnLayer(layer_id):
-                    if poly_set is not None or not self.only_selected_area or zone.IsSelected():
-                        if Version() < "7":
-                            # below 7.0.0
-                            poly_set_layer.Append(zone.RawPolysList(layer_id))
-                        else:
-                            # 7.0.0 and above
-                            poly_set_layer.Append(zone.Outline())
 
-            if poly_set is None:
-                poly_set = poly_set_layer
-            else:
-                poly_set.BooleanIntersection(poly_set_layer)
-                poly_set.Simplify()
+        # Snapshot of vias that existed BEFORE this run.
+        # Each zone resets to this baseline so that vias placed on OTHER zones
+        # do not block via placement on the current zone's perimeter.
+        existing_vias = [track for track in self.pcb.GetTracks() if (track.GetClass() == "PCB_VIA" and track.GetNetname() == self.netname)]
+        # Global list also grows so we avoid absolute overlaps between zones.
+        all_new_vias = []
 
-            if poly_set.OutlineCount() == 0:
-                wxPrint("No areas to fill")
-                return
-
-        # Size the polygons so the vias fit inside
-        poly_set.Inflate(int(-(1 * self.clearance + 0.5 * self.size)), CORNER_STRATEGY_CHAMFER_ALL_CORNERS, FromMM(0.01))
-
-        wxPrint("Generating concentric via placement")
-        # Get all vias from the selected net
-        all_vias = [track for track in self.pcb.GetTracks() if (track.GetClass() == "PCB_VIA" and track.GetNetname() == self.netname)]
-
+        wxPrint("Generating via placement")
         off = 0
         via_placed = 0
-        # Place vias along all outlines and holes
-        while poly_set.OutlineCount() > 0:
-            for i in range(0, poly_set.OutlineCount()):
-                outline = poly_set.Outline(i)
-                via_placed += self.AddViasAlongOutline(outline, outline, all_vias, off)
+        processed_any = False
 
-                if self.fill_type != self.FILL_TYPE_OUTLINE_NO_HOLES:
-                    for k in range(0, poly_set.HoleCount(i)):
-                        hole = poly_set.Hole(i, k)
-                        via_placed += self.AddViasAlongOutline(hole, outline, all_vias, off)
+        # Process each GND zone independently to avoid cross-layer polygon merge artefacts.
+        # Each zone's outline is shrunk slightly and vias are placed along its boundary.
+        for zone in zones:
+            if self.only_selected_area and not zone.IsSelected():
+                continue
 
-            # Size the polygons to place the next ring
-            if self.fill_type == self.FILL_TYPE_CONCENTRIC:
-                poly_set.Inflate(int(-max(self.step, self.size + self.clearance)), CORNER_STRATEGY_CHAMFER_ALL_CORNERS, FromMM(0.01))
-                off = 0.5 if off == 0 else 0
+            # Build the polygon for this zone.
+            # For KiCad >= 7, zone.Outline() may return an empty SHAPE_POLY_SET for inner-layer
+            # zones. We therefore try to build the polygon from points directly.
+            zone_poly = SHAPE_POLY_SET()
+            if Version() < "7":
+                for layer_id in zone.GetLayerSet().CuStack():
+                    z = zone.RawPolysList(layer_id)
+                    if z.OutlineCount() > 0:
+                        zone_poly.Append(z)
+                        break
             else:
-                poly_set = SHAPE_POLY_SET()
+                src = zone.Outline()
+                if src is not None and src.OutlineCount() > 0:
+                    # Manually copy each outline to avoid SWIG aliasing issues
+                    for oi in range(src.OutlineCount()):
+                        chain = src.Outline(oi)
+                        zone_poly.NewOutline()
+                        for pi in range(chain.PointCount()):
+                            pt = chain.CPoint(pi)
+                            zone_poly.Append(pt.x, pt.y)
+
+            if self.debug:
+                wxPrint("  Zone layer={} outline_pts={} outline_count={}".format(
+                    zone.GetLayerName(), zone_poly.TotalVertices() if hasattr(zone_poly, 'TotalVertices') else '?',
+                    zone_poly.OutlineCount()))
+
+            if zone_poly.OutlineCount() == 0:
+                if self.debug:
+                    wxPrint("  -> Skipped (empty outline)")
+                continue
+
+            processed_any = True
+
+            # Shrink slightly so vias fit inside the zone boundary.
+            # Use ALLOW_ACUTE_CORNERS (no chamfering) to preserve complex polygon topology.
+            inflate_amount = int(-(1 * self.clearance + 0.5 * self.size))
+            zone_poly.Inflate(inflate_amount, CORNER_STRATEGY_ALLOW_ACUTE_CORNERS, FromMM(0.01))
+
+            if self.debug:
+                wxPrint("  -> After inflate: outline_count={}".format(zone_poly.OutlineCount()))
+
+            if zone_poly.OutlineCount() == 0:
+                if self.debug:
+                    wxPrint("  -> Skipped (empty after inflate)")
+                continue  # Zone too small after shrink
+
+            # For this zone, only use pre-existing vias + already-placed-this-run vias
+            # for spacing checks – NOT vias placed on other zones' perimeters.
+            zone_vias = existing_vias + all_new_vias
+
+            # Place vias along outlines and holes of this zone
+            current_poly = zone_poly
+            while current_poly.OutlineCount() > 0:
+                for i in range(0, current_poly.OutlineCount()):
+                    outline = current_poly.Outline(i)
+                    n = self.AddViasAlongOutline(outline, outline, zone_vias, off)
+                    via_placed += n
+
+                    if self.fill_type != self.FILL_TYPE_OUTLINE_NO_HOLES:
+                        for k in range(0, current_poly.HoleCount(i)):
+                            hole = current_poly.Hole(i, k)
+                            n = self.AddViasAlongOutline(hole, outline, zone_vias, off)
+                            via_placed += n
+
+                # Concentric: shrink inward for next ring; Outline: single pass
+                if self.fill_type == self.FILL_TYPE_CONCENTRIC:
+                    current_poly.Inflate(int(-max(self.step, self.size + self.clearance)), CORNER_STRATEGY_CHAMFER_ALL_CORNERS, FromMM(0.01))
+                    off = 0.5 if off == 0 else 0
+                else:
+                    current_poly = SHAPE_POLY_SET()  # exit while loop
+
+            # Record vias placed for this zone to prevent global overlaps
+            all_new_vias = zone_vias[len(existing_vias):]
+
+        if not processed_any:
+            wxPrint("No areas to fill")
+            return
 
         self.RefillBoardAreas()
-
         msg = "Done. {:d} vias placed. You have to refill all your pcb's areas/zones !!!".format(via_placed)
         wxPrint(msg)
-
         return via_placed
 
     """

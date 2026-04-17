@@ -15,18 +15,29 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Debug File Structure
+        run: |
+          echo "Checking current directory contents:"
+          ls -R
+          echo "Checking GITHUB_REF: $GITHUB_REF"
+
       - name: Ensure resources directory exists
         run: mkdir -p resources
 
       - name: Zip Plugin
         run: |
-          # Use zip and ignore errors if some files are missing, but ensure metadata and plugins are included
-          zip -r ViaStitching.zip plugins metadata.json resources/ || echo "Zip completed with some warnings"
+          # Use -r for recursive and -j to junk paths if needed, but here we want the structure.
+          # We use || true to ensure the build continues even if zip warns about empty dirs.
+          zip -r ViaStitching.zip plugins metadata.json resources || true
+          ls -lh ViaStitching.zip
 
       - name: Generate repository.json
         run: |
           # Extract version from tag (e.g., refs/tags/v1.0.0 -> 1.0.0)
-          VERSION=$(echo ${GITHUB_REF#refs/tags/} | sed 's/^v//')
+          # Use a more robust way to handle the tag name
+          TAG_NAME=$(git describe --tags --abbrev=0)
+          VERSION=${TAG_NAME#v}
+          echo "Version extracted: $VERSION"
           echo "{
             \"plugins\": [
               {
@@ -37,14 +48,16 @@ jobs:
               }
             ]
           }" > repository.json
+          ls -lh repository.json
 
       - name: Create Release and Upload Assets
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Delete existing release if it exists to avoid "release already exists" error
+          # Delete existing release to avoid conflicts
           gh release delete ${{ github.ref_name }} --yes || true
           
+          # Create new release and upload assets
           gh release create ${{ github.ref_name }} \
             --title "Release ${{ github.ref_name }}" \
             --body "Automated release for version ${{ github.ref_name }}. Fixed KiCAD 10 compatibility and translated interface to Chinese." \

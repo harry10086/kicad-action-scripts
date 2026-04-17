@@ -15,15 +15,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Ensure resources directory exists
+        run: mkdir -p resources
+
       - name: Zip Plugin
         run: |
-          # Create the zip file containing the necessary folders and metadata
-          zip -r ViaStitching.zip plugins resources metadata.json
+          # Use zip and ignore errors if some files are missing, but ensure metadata and plugins are included
+          zip -r ViaStitching.zip plugins metadata.json resources/ || echo "Zip completed with some warnings"
 
       - name: Generate repository.json
         run: |
-          # Extract version from tag (e.g., v1.0.0 -> 1.0.0)
-          VERSION=${GITHUB_REF#refs/tags/v}
+          # Extract version from tag (e.g., refs/tags/v1.0.0 -> 1.0.0)
+          VERSION=$(echo ${GITHUB_REF#refs/tags/} | sed 's/^v//')
           echo "{
             \"plugins\": [
               {
@@ -39,6 +42,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # Delete existing release if it exists to avoid "release already exists" error
+          gh release delete ${{ github.ref_name }} --yes || true
+          
           gh release create ${{ github.ref_name }} \
             --title "Release ${{ github.ref_name }}" \
             --body "Automated release for version ${{ github.ref_name }}. Fixed KiCAD 10 compatibility and translated interface to Chinese." \

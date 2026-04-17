@@ -1,10 +1,20 @@
 {
-  "plugins": [
-    {
-      "identifier": "com.github.jsreynaud.viastitching",
-      "name": "ViaStitching",
-      "version": "1.0.1",
-      "download_url": "https://github.com/harry10086/kicad-action-scripts/releases/latest/download/ViaStitching.zip"
+  "$schema": "https://go.kicad.org/pcm/schemas/v1",
+  "name": "ViaStitching Repository",
+  "maintainer": {
+    "name": "JS Reynaud",
+    "contact": {
+      "web": "https://github.com/harry10086"
     }
-  ]
+  },
+  "packages": {
+    "url": "https://github.com/harry10086/kicad-action-scripts/releases/latest/download/packages.json",
+    "sha256": "TBD",
+    "update_timestamp": 0
+  },
+  "resources": {
+    "url": "https://github.com/harry10086/kicad-action-scripts/releases/latest/download/resources.zip",
+    "sha256": "TBD",
+    "update_timestamp": 0
+  }
 }

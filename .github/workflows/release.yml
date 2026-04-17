@@ -15,50 +15,88 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Debug File Structure
-        run: |
-          echo "Checking current directory contents:"
-          ls -R
-          echo "Checking GITHUB_REF: $GITHUB_REF"
-
-      - name: Ensure resources directory exists
+      - name: Ensure directories exist
         run: mkdir -p resources
 
       - name: Zip Plugin
         run: |
-          # Use -r for recursive and -j to junk paths if needed, but here we want the structure.
-          # We use || true to ensure the build continues even if zip warns about empty dirs.
           zip -r ViaStitching.zip plugins metadata.json resources || true
-          ls -lh ViaStitching.zip
+
+      - name: Generate packages.json
+        run: |
+          VERSION=$(echo ${GITHUB_REF#refs/tags/} | sed 's/^v//')
+          SIZE=$(stat -c%s "ViaStitching.zip")
+          SHA=$(sha256sum "ViaStitching.zip" | cut -d' ' -f1)
+          
+          echo "{
+            \"\$schema\": \"https://go.kicad.org/pcm/schemas/v1\",
+            \"packages\": [
+              {
+                \"name\": \"ViaStitching\",
+                \"description\": \"为 PCB 区域生成过孔缝合\",
+                \"description_full\": \"ViaStitching 是一款高效的 KiCAD 插件，能够为 PCB 的铜箔区域自动生成过孔缝合，以增强地平面或电源平面的导电性能并降低电磁干扰 (EMI)。\",
+                \"identifier\": \"com.github.jsreynaud.viastitching\",
+                \"type\": \"plugin\",
+                \"author\": {
+                  \"name\": \"JS Reynaud\",
+                  \"contact\": { \"web\": \"https://github.com/harry10086\" }
+                },
+                \"license\": \"GPL-2.0-or-later\",
+                \"resources\": {
+                  \"homepage\": \"https://github.com/harry10086/kicad-action-scripts\",
+                  \"repository\": \"https://github.com/harry10086/kicad-action-scripts\",
+                  \"issues\": \"https://github.com/harry10086/kicad-action-scripts/issues\"
+                },
+                \"versions\": [
+                  {
+                    \"version\": \"$VERSION\",
+                    \"status\": \"stable\",
+                    \"kicad_version\": \"10.0\",
+                    \"runtime\": \"swig\",
+                    \"download_url\": \"https://github.com/${{ github.repository }}/releases/download/v$VERSION/ViaStitching.zip\",
+                    \"download_sha256\": \"$SHA\",
+                    \"download_size\": $SIZE,
+                    \"install_size\": $SIZE
+                  }
+                ]
+              }
+            ]
+          }" > packages.json
 
       - name: Generate repository.json
         run: |
-          # Extract version from tag (e.g., refs/tags/v1.0.0 -> 1.0.0)
-          # Use a more robust way to handle the tag name
-          TAG_NAME=$(git describe --tags --abbrev=0)
-          VERSION=${TAG_NAME#v}
-          echo "Version extracted: $VERSION"
+          VERSION=$(echo ${GITHUB_REF#refs/tags/} | sed 's/^v//')
+          SHA=$(sha256sum "packages.json" | cut -d' ' -f1)
+          TS=$(date +%s)
+          
           echo "{
-            \"plugins\": [
-              {
-                \"identifier\": \"com.github.jsreynaud.viastitching\",
-                \"name\": \"ViaStitching\",
-                \"version\": \"$VERSION\",
-                \"download_url\": \"https://github.com/${{ github.repository }}/releases/download/v$VERSION/ViaStitching.zip\"
-              }
-            ]
+            \"\$schema\": \"https://go.kicad.org/pcm/schemas/v1\",
+            \"name\": \"ViaStitching Repository\",
+            \"maintainer\": {
+              \"name\": \"JS Reynaud\",
+              \"contact\": { \"web\": \"https://github.com/harry10086\" }
+            },
+            \"packages\": {
+              \"url\": \"https://github.com/${{ github.repository }}/releases/latest/download/packages.json\",
+              \"sha256\": \"$SHA\",
+              \"update_timestamp\": $TS
+            },
+            \"resources\": {
+              \"url\": \"https://github.com/${{ github.repository }}/releases/latest/download/resources.zip\",
+              \"sha256\": \"TBD\",
+              \"update_timestamp\": $TS
+            }
           }" > repository.json
-          ls -lh repository.json
+
+      - name: Create Empty Resources Zip
+        run: zip -r resources.zip resources/ || true
 
       - name: Create Release and Upload Assets
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Delete existing release to avoid conflicts
           gh release delete ${{ github.ref_name }} --yes || true
-          
-          # Create new release and upload assets
           gh release create ${{ github.ref_name }} \
             --title "Release ${{ github.ref_name }}" \
             --notes "Automated release for version ${{ github.ref_name }}. Fixed KiCAD 10 compatibility and translated interface to Chinese." \
-            ViaStitching.zip repository.json
+            ViaStitching.zip packages.json repository.json resources.zip

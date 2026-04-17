@@ -1,0 +1,10 @@
+{
+  "plugins": [
+    {
+      "identifier": "com.github.jsreynaud.viastitching",
+      "name": "ViaStitching",
+      "version": "1.0.1",
+      "download_url": "https://github.com/harry10086/kicad-action-scripts/releases/latest/download/ViaStitching.zip"
+    }
+  ]
+}

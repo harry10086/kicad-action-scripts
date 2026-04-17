@@ -20,7 +20,7 @@
         }
       },
       "license": "GPL-2.0-or-later",
-      "version": "1.0.1",
+      "version": "{{VERSION}}",
       "type": "plugin",
       "resources": {
         "homepage": "https://github.com/harry10086/kicad-action-scripts",
@@ -29,11 +29,11 @@
       },
       "versions": [
         {
-          "version": "1.0.1",
+          "version": "{{VERSION}}",
           "status": "stable",
           "kicad_version": "10.0",
           "runtime": "swig",
-          "download_url": "https://github.com/harry10086/kicad-action-scripts/releases/latest/download/ViaStitching.zip"
+          "download_url": "{{DOWNLOAD_URL}}"
         }
       ]
     }

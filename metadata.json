@@ -1,0 +1,25 @@
+{
+    "$schema": "https://go.kicad.org/pcm/schemas/v2",
+    "identifier": "com.github.jsreynaud.viastitching",
+    "name": "ViaStitching",
+    "description": "为 PCB 区域生成过孔缝合",
+    "description_full": "ViaStitching 是一款高效的 KiCAD 插件，能够为 PCB 的铜箔区域（Zones）自动生成过孔缝合（Via Stitching），以增强地平面或电源平面的导电性能并降低电磁干扰。",
+    "author": {
+        "name": "JS Reynaud",
+        "contact": {
+            "email": "js.reynaud@gmail.com"
+        }
+    },
+    "license": "GPL-2.0-or-later",
+    "version": "1.0.1",
+    "type": "plugin",
+    "resources": {},
+    "versions": [
+        {
+            "version": "1.0.1",
+            "status": "stable",
+            "kicad_version": "10.0",
+            "runtime": "swig"
+        }
+    ]
+}

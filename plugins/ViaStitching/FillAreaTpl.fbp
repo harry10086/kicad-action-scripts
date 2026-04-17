@@ -53,7 +53,7 @@
       <property name="size">402,663</property>
       <property name="style">wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER</property>
       <property name="subclass"></property>
-      <property name="title">Fill Area parameters</property>
+      <property name="title">过孔填充参数</property>
       <property name="tooltip"></property>
       <property name="two_step_creation">0</property>
       <property name="window_extra_style"></property>
@@ -113,7 +113,7 @@
                 <property name="gripper">0</property>
                 <property name="hidden">0</property>
                 <property name="id">wxID_ANY</property>
-                <property name="label">Via copper size (mm)</property>
+                <property name="label">过孔铜箔尺寸 (mm)</property>
                 <property name="markup">0</property>
                 <property name="max_size"></property>
                 <property name="maximize_button">0</property>
@@ -240,7 +240,7 @@
                 <property name="gripper">0</property>
                 <property name="hidden">0</property>
                 <property name="id">wxID_ANY</property>
-                <property name="label">Via drill size (mm)</property>
+                <property name="label">过孔钻孔尺寸 (mm)</property>
                 <property name="markup">0</property>
                 <property name="max_size"></property>
                 <property name="maximize_button">0</property>
@@ -367,7 +367,7 @@
                 <property name="gripper">0</property>
                 <property name="hidden">0</property>
                 <property name="id">wxID_ANY</property>
-                <property name="label">Via clearance (mm)</property>
+                <property name="label">过孔间距 (mm)</property>
                 <property name="markup">0</property>
                 <property name="max_size"></property>
                 <property name="maximize_button">0</property>
@@ -494,7 +494,7 @@
                 <property name="gripper">0</property>
                 <property name="hidden">0</property>
                 <property name="id">wxID_ANY</property>
-                <property name="label">Via grid (mm)</property>
+                <property name="label">过孔网格 (mm)</property>
                 <property name="markup">0</property>
                 <property name="max_size"></property>
                 <property name="maximize_button">0</property>
@@ -621,7 +621,7 @@
                 <property name="gripper">0</property>
                 <property name="hidden">0</property>
                 <property name="id">wxID_ANY</property>
-                <property name="label">Grid Origin</property>
+                <property name="label">网格原点</property>
                 <property name="markup">0</property>
                 <property name="max_size"></property>
                 <property name="maximize_button">0</property>
@@ -668,7 +668,7 @@
                 <property name="caption"></property>
                 <property name="caption_visible">1</property>
                 <property name="center_pane">0</property>
-                <property name="choices">&quot;Board Bounds&quot; &quot;Absolute (0, 0)&quot; &quot;Grid Origin&quot;</property>
+                <property name="choices">&quot;板框边界&quot; &quot;绝对坐标 (0, 0)&quot; &quot;网格原点&quot;</property>
                 <property name="close_button">1</property>
                 <property name="context_help"></property>
                 <property name="context_menu">1</property>
@@ -710,7 +710,7 @@
                 <property name="validator_style">wxFILTER_NONE</property>
                 <property name="validator_type">wxDefaultValidator</property>
                 <property name="validator_variable"></property>
-                <property name="value">Board Bounds</property>
+                <property name="value">板框边界</property>
                 <property name="window_extra_style"></property>
                 <property name="window_name"></property>
                 <property name="window_style"></property>
@@ -818,7 +818,7 @@
                 <property name="gripper">0</property>
                 <property name="hidden">0</property>
                 <property name="id">wxID_ANY</property>
-                <property name="label">Net name</property>
+                <property name="label">网络名称</property>
                 <property name="markup">0</property>
                 <property name="max_size"></property>
                 <property name="maximize_button">0</property>
@@ -946,7 +946,7 @@
                 <property name="gripper">0</property>
                 <property name="hidden">0</property>
                 <property name="id">wxID_ANY</property>
-                <property name="label">Pattern</property>
+                <property name="label">填充图案</property>
                 <property name="markup">0</property>
                 <property name="max_size"></property>
                 <property name="maximize_button">0</property>
@@ -993,7 +993,7 @@
                 <property name="caption"></property>
                 <property name="caption_visible">1</property>
                 <property name="center_pane">0</property>
-                <property name="choices">&quot;Concentric&quot; &quot;Outline&quot; &quot;Outline (No Holes)&quot; &quot;Rectangular&quot; &quot;Star&quot;</property>
+                <property name="choices">&quot;同心圆&quot; &quot;轮廓&quot; &quot;轮廓 (不含孔)&quot; &quot;矩形&quot; &quot;星形&quot;</property>
                 <property name="close_button">1</property>
                 <property name="context_help"></property>
                 <property name="context_menu">1</property>
@@ -1035,7 +1035,7 @@
                 <property name="validator_style">wxFILTER_NONE</property>
                 <property name="validator_type">wxDefaultValidator</property>
                 <property name="validator_variable"></property>
-                <property name="value">Rectangular</property>
+                <property name="value">矩形</property>
                 <property name="window_extra_style"></property>
                 <property name="window_name"></property>
                 <property name="window_style"></property>
@@ -1074,7 +1074,7 @@
                 <property name="gripper">0</property>
                 <property name="hidden">0</property>
                 <property name="id">wxID_ANY</property>
-                <property name="label">Random it</property>
+                <property name="label">随机分布</property>
                 <property name="markup">0</property>
                 <property name="max_size"></property>
                 <property name="maximize_button">0</property>
@@ -1201,7 +1201,7 @@
                 <property name="gripper">0</property>
                 <property name="hidden">0</property>
                 <property name="id">wxID_ANY</property>
-                <property name="label">Only under selected Zone</property>
+                <property name="label">仅在选中的区域内</property>
                 <property name="markup">0</property>
                 <property name="max_size"></property>
                 <property name="maximize_button">0</property>
@@ -1328,7 +1328,7 @@
                 <property name="gripper">0</property>
                 <property name="hidden">0</property>
                 <property name="id">wxID_ANY</property>
-                <property name="label">Ignore areas on other layers</property>
+                <property name="label">忽略其他层上的区域</property>
                 <property name="markup">0</property>
                 <property name="max_size"></property>
                 <property name="maximize_button">0</property>
@@ -1455,7 +1455,7 @@
                 <property name="gripper">0</property>
                 <property name="hidden">0</property>
                 <property name="id">wxID_ANY</property>
-                <property name="label">Also on tracks with same net</property>
+                <property name="label">同时也包含相同网络的走线</property>
                 <property name="markup">0</property>
                 <property name="max_size"></property>
                 <property name="maximize_button">0</property>
@@ -1582,7 +1582,7 @@
                 <property name="gripper">0</property>
                 <property name="hidden">0</property>
                 <property name="id">wxID_ANY</property>
-                <property name="label">Debug mode</property>
+                <property name="label">调试模式</property>
                 <property name="markup">0</property>
                 <property name="max_size"></property>
                 <property name="maximize_button">0</property>
@@ -1788,7 +1788,7 @@
                 <property name="gripper">0</property>
                 <property name="hidden">0</property>
                 <property name="id">wxID_OK</property>
-                <property name="label">Run</property>
+                <property name="label">运行</property>
                 <property name="margins"></property>
                 <property name="markup">0</property>
                 <property name="max_size"></property>
@@ -1862,7 +1862,7 @@
                 <property name="gripper">0</property>
                 <property name="hidden">0</property>
                 <property name="id">wxID_CANCEL</property>
-                <property name="label">Cancel</property>
+                <property name="label">取消</property>
                 <property name="margins"></property>
                 <property name="markup">0</property>
                 <property name="max_size"></property>
@@ -1936,7 +1936,7 @@
                 <property name="gripper">0</property>
                 <property name="hidden">0</property>
                 <property name="id">wxID_DELETE</property>
-                <property name="label">Delete Vias</property>
+                <property name="label">删除过孔</property>
                 <property name="margins"></property>
                 <property name="markup">0</property>
                 <property name="max_size"></property>

@@ -24,6 +24,20 @@ from . import FillArea
 from . import FillAreaDialog
 import os
 
+GRID_TYPE_LABEL_TO_VALUE = {
+    u"板框边界": FillArea.FillArea.GRID_TYPE_BOARD_BOUNDS,
+    u"绝对坐标 (0, 0)": FillArea.FillArea.GRID_TYPE_ABSOLUTE,
+    u"网格原点": FillArea.FillArea.GRID_TYPE_GRID_ORIGIN,
+}
+
+FILL_TYPE_LABEL_TO_VALUE = {
+    u"同心圆": FillArea.FillArea.FILL_TYPE_CONCENTRIC,
+    u"轮廓": FillArea.FillArea.FILL_TYPE_OUTLINE,
+    u"轮廓 (不含孔)": FillArea.FillArea.FILL_TYPE_OUTLINE_NO_HOLES,
+    u"矩形": FillArea.FillArea.FILL_TYPE_RECTANGULAR,
+    u"星形": FillArea.FillArea.FILL_TYPE_STAR,
+}
+
 
 def PopulateNets(anet, dlg):
     netnames = list(set([zone.GetNetname() for zone in pcbnew.GetBoard().Zones()]))
@@ -44,9 +58,9 @@ class FillAreaDialogEx(FillAreaDialog.FillAreaDialog):
 class FillAreaAction(pcbnew.ActionPlugin):
 
     def defaults(self):
-        self.name = "Via Stitching Generator"
-        self.category = "Modify PCB"
-        self.description = "Via Stitching for PCB Zone"
+        self.name = "过孔缝合生成器"
+        self.category = "修改 PCB"
+        self.description = "为 PCB 区域生成过孔缝合"
         self.icon_file_name = os.path.join(os.path.dirname(__file__), "./stitching-vias.png")
         self.show_toolbar_button = True
 
@@ -57,7 +71,7 @@ class FillAreaAction(pcbnew.ActionPlugin):
         # a.m_DrillMM.SetValue("0.3")
         # a.m_Netname.SetValue("GND")
         # a.m_ClearanceMM.SetValue("0.2")
-        a.m_bitmapStitching.SetBitmap(wx.Bitmap(os.path.join(os.path.dirname(os.path.realpath(__file__)), "stitching-vias-help.png")))
+        a.m_bitmapStitching.SetBitmap(wx.Bitmap(os.path.join(os.path.abspath(os.path.dirname(__file__)), "stitching-vias-help.png")))
         self.board = pcbnew.GetBoard()
         self.boardDesignSettings = self.board.GetDesignSettings()
         a.m_SizeMM.SetValue(str(pcbnew.ToMM(self.boardDesignSettings.GetCurrentViaSize())))
@@ -82,8 +96,8 @@ class FillAreaAction(pcbnew.ActionPlugin):
                     fill.SetDebug()
                 fill.SetRandom(a.m_Random.IsChecked())
                 fill.SetViaThroughAreas(a.m_viaThroughAreas.IsChecked())
-                fill.SetGridType(a.m_cbGridType.GetStringSelection())
-                fill.SetFillType(a.m_cbFillType.GetStringSelection())
+                fill.SetGridType(GRID_TYPE_LABEL_TO_VALUE.get(a.m_cbGridType.GetStringSelection(), FillArea.FillArea.GRID_TYPE_BOARD_BOUNDS))
+                fill.SetFillType(FILL_TYPE_LABEL_TO_VALUE.get(a.m_cbFillType.GetStringSelection(), FillArea.FillArea.FILL_TYPE_RECTANGULAR))
                 fill.SetSameNetTracks(a.m_sameNetTracks.IsChecked())
                 if a.m_only_selected.IsChecked():
                     fill.OnlyOnSelectedArea()

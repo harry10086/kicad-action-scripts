@@ -303,7 +303,7 @@ STEP         = '-'
                 area.SetNeedRefill(True)
             # area.UnFill()
         # filler = ZONE_FILLER(self.pcb)
-        # filler.Fill(self.pcb.Zones())
+        # filler.Fill(self.pcb.GetZones())
 
     def CheckViaInAllAreas(self, via, all_areas):
         """
@@ -664,7 +664,7 @@ STEP         = '-'
 
         # Get the board outline and size with
         board_edge = SHAPE_POLY_SET()
-        self.pcb.GetBoardPolygonOutlines(board_edge)
+        self.pcb.GetBoardPolygonOutlines(board_edge, True)
         b_clearance = max(self.pcb.GetDesignSettings().m_CopperEdgeClearance, self.clearance) + self.size
         board_edge.Deflate(int(b_clearance), CORNER_STRATEGY_ROUND_ALL_CORNERS, FromMM(0.01))
 

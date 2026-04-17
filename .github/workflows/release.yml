@@ -1,0 +1,45 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Zip Plugin
+        run: |
+          # Create the zip file containing the necessary folders and metadata
+          zip -r ViaStitching.zip plugins resources metadata.json
+
+      - name: Generate repository.json
+        run: |
+          # Extract version from tag (e.g., v1.0.0 -> 1.0.0)
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "{
+            \"plugins\": [
+              {
+                \"identifier\": \"com.github.jsreynaud.viastitching\",
+                \"name\": \"ViaStitching\",
+                \"version\": \"$VERSION\",
+                \"download_url\": \"https://github.com/${{ github.repository }}/releases/download/v$VERSION/ViaStitching.zip\"
+              }
+            ]
+          }" > repository.json
+
+      - name: Create Release and Upload Assets
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create ${{ github.ref_name }} \
+            --title "Release ${{ github.ref_name }}" \
+            --body "Automated release for version ${{ github.ref_name }}. Fixed KiCAD 10 compatibility and translated interface to Chinese." \
+            ViaStitching.zip repository.json

@@ -60,5 +60,5 @@ jobs:
           # Create new release and upload assets
           gh release create ${{ github.ref_name }} \
             --title "Release ${{ github.ref_name }}" \
-            --body "Automated release for version ${{ github.ref_name }}. Fixed KiCAD 10 compatibility and translated interface to Chinese." \
+            --notes "Automated release for version ${{ github.ref_name }}. Fixed KiCAD 10 compatibility and translated interface to Chinese." \
             ViaStitching.zip repository.json

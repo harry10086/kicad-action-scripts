@@ -11,10 +11,5 @@
     "url": "https://raw.githubusercontent.com/harry10086/kicad-action-scripts/master/packages.json",
     "sha256": "918d72b537718ac56ee5f680f8d6f1cdafda23125788b3a873eb0b14b0fb49bf",
     "update_timestamp": 1713500000
-  },
-  "resources": {
-    "url": "https://github.com/harry10086/kicad-action-scripts/releases/latest/download/resources.zip",
-    "sha256": "36e3e221a8a327953a9dc7f2aea63802ab72062bbd3d7092538da19642afa8cd",
-    "update_timestamp": 1713500000
   }
 }

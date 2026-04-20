@@ -8,13 +8,13 @@
     }
   },
   "packages": {
-    "url": "https://github.com/harry10086/kicad-action-scripts/releases/latest/download/packages.json",
-    "sha256": "TBD",
-    "update_timestamp": 0
+    "url": "https://raw.githubusercontent.com/harry10086/kicad-action-scripts/master/packages.json",
+    "sha256": "7cb7b770d18e755d04bdbabaeb26ca15dabbfa4fe6a604953797bb32bc605216",
+    "update_timestamp": 1713500000
   },
   "resources": {
     "url": "https://github.com/harry10086/kicad-action-scripts/releases/latest/download/resources.zip",
     "sha256": "TBD",
-    "update_timestamp": 0
+    "update_timestamp": 1713500000
   }
 }

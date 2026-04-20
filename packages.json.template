@@ -13,7 +13,7 @@
           "web": "https://github.com/harry10086"
         }
       },
-      "license": "GPL-2.0-or-later",
+       "license": "GPL-2.0",
       "resources": {
         "homepage": "https://github.com/harry10086/kicad-action-scripts",
         "repository": "https://github.com/harry10086/kicad-action-scripts",

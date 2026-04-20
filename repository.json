@@ -9,7 +9,7 @@
   },
   "packages": {
     "url": "https://raw.githubusercontent.com/harry10086/kicad-action-scripts/master/packages.json",
-    "sha256": "7cb7b770d18e755d04bdbabaeb26ca15dabbfa4fe6a604953797bb32bc605216",
+    "sha256": "918d72b537718ac56ee5f680f8d6f1cdafda23125788b3a873eb0b14b0fb49bf",
     "update_timestamp": 1713500000
   },
   "resources": {
